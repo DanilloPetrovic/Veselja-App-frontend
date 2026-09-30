@@ -9,17 +9,14 @@ import {
   Paper,
   Container,
 } from "@mui/material";
-import axios from "axios";
+import api from "../../functions/axios";
 
 const Login = () => {
   const navigate = useNavigate();
 
   const loginUser = async (values) => {
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/admin/login",
-        values,
-      );
+      const response = await api.post("/admin/login", values);
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
