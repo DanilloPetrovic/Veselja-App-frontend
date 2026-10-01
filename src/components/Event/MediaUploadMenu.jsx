@@ -123,18 +123,6 @@ const MediaUploadMenu = ({ onFileChange }) => {
           </ListItemIcon>
           <ListItemText>Dodaj video</ListItemText>
         </MenuItem>
-
-        <MenuItem
-          onClick={() => {
-            handleCloseMenu();
-            cameraInputRef.current?.click();
-          }}
-        >
-          <ListItemIcon sx={{ color: "#0f172a" }}>
-            <PhotoCameraIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Uslikaj odmah</ListItemText>
-        </MenuItem>
       </Menu>
     </>
   );

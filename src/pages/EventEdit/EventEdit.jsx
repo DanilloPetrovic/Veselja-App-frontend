@@ -64,6 +64,7 @@ const EventEdit = () => {
   const [pin, setPin] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedFont, setSelectedFont] = useState("Tangerine");
 
   const [eventDataState, setEventDataState] = useState(null);
   const [formData, setFormData] = useState({
@@ -96,6 +97,10 @@ const EventEdit = () => {
             welcomeMessage: eventData.welcomeMessage || "",
           });
           setImagePreview(eventData.coverImageUrl || null);
+
+          if (eventData.fontFamily) {
+            setSelectedFont(eventData.fontFamily);
+          }
 
           const token = localStorage.getItem("token");
           if (token) {
@@ -160,13 +165,11 @@ const EventEdit = () => {
     try {
       setSubmitting(true);
 
-      if (slug) {
-        localStorage.setItem(`event_font_${slug}`, selectedFont);
-      }
-
       const data = new FormData();
       data.append("title", formData.title);
       data.append("welcomeMessage", formData.welcomeMessage);
+
+      data.append("fontFamily", selectedFont);
 
       if (coverImage) {
         data.append("coverImage", coverImage);
