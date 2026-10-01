@@ -14,11 +14,45 @@ import {
   IconButton,
   Avatar,
   CardMedia,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import SaveIcon from "@mui/icons-material/Save";
+import DownloadIcon from "@mui/icons-material/Download";
+
+const FONT_OPTIONS = [
+  { label: "Tangerine", value: "Tangerine" },
+  { label: "Great Vibes", value: "Great Vibes" },
+  { label: "Dancing Script", value: "Dancing Script" },
+  { label: "Pacifico", value: "Pacifico" },
+  { label: "Playfair Display", value: "Playfair Display" },
+  { label: "Montserrat", value: "Montserrat" },
+  { label: "Alex Brush (Elegantan rukopis)", value: "Alex Brush" },
+  { label: "Caveat (Opušten rukopis)", value: "Caveat" },
+  { label: "Cinzel (Elegatni serif)", value: "Cinzel" },
+  { label: "Sacramento", value: "Sacramento" },
+  { label: "Parisienne", value: "Parisienne" },
+  { label: "Marck Script", value: "Marck Script" },
+];
+
+const loadGoogleFont = (fontFamily) => {
+  if (!fontFamily) return;
+  const formattedFont = fontFamily.replace(/ /g, "+");
+  const linkId = `google-font-${formattedFont}`;
+
+  if (!document.getElementById(linkId)) {
+    const link = document.createElement("link");
+    link.id = linkId;
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${formattedFont}:wght@400;700&display=swap`;
+    document.head.appendChild(link);
+  }
+};
 
 const EventEdit = () => {
   const { slug } = useParams();
@@ -34,11 +68,19 @@ const EventEdit = () => {
   const [eventDataState, setEventDataState] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
-    eventDate: "",
     welcomeMessage: "",
   });
+
+  const savedFont =
+    (slug && localStorage.getItem(`event_font_${slug}`)) || "Tangerine";
+  const [selectedFont, setSelectedFont] = useState(savedFont);
+
   const [coverImage, setCoverImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  useEffect(() => {
+    loadGoogleFont(selectedFont);
+  }, [selectedFont]);
 
   useEffect(() => {
     const initEventData = async () => {
@@ -51,9 +93,6 @@ const EventEdit = () => {
           setEventDataState(eventData);
           setFormData({
             title: eventData.title || "",
-            eventDate: eventData.eventDate
-              ? new Date(eventData.eventDate).toISOString().slice(0, 16)
-              : "",
             welcomeMessage: eventData.welcomeMessage || "",
           });
           setImagePreview(eventData.coverImageUrl || null);
@@ -97,6 +136,22 @@ const EventEdit = () => {
     }
   };
 
+  const handleFontChange = (e) => {
+    const font = e.target.value;
+    setSelectedFont(font);
+    loadGoogleFont(font);
+  };
+
+  const handleDownloadAll = () => {
+    if (!eventDataState?.id) {
+      alert("Događaj nije pronađen.");
+      return;
+    }
+
+    const downloadZipUrl = `${api.defaults.baseURL}/media/download-all/${eventDataState.id}`;
+    window.location.href = downloadZipUrl;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -104,9 +159,13 @@ const EventEdit = () => {
 
     try {
       setSubmitting(true);
+
+      if (slug) {
+        localStorage.setItem(`event_font_${slug}`, selectedFont);
+      }
+
       const data = new FormData();
       data.append("title", formData.title);
-      data.append("eventDate", formData.eventDate);
       data.append("welcomeMessage", formData.welcomeMessage);
 
       if (coverImage) {
@@ -286,6 +345,59 @@ const EventEdit = () => {
         <Paper
           elevation={0}
           sx={{
+            p: { xs: 2.5, sm: 3 },
+            mb: 3,
+            borderRadius: 4,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+            backgroundColor: "#ffffff",
+          }}
+        >
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={2}
+          >
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  color: "#1e293b",
+                  fontSize: "1.1rem",
+                }}
+              >
+                Preuzimanje medija
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#64748b" }}>
+                Preuzmite sve slike i video zapise sa ovog događaja u jednoj ZIP
+                arhivi.
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              onClick={handleDownloadAll}
+              sx={{
+                py: 1.2,
+                px: 3,
+                borderRadius: 2.5,
+                backgroundColor: "#0f172a",
+                color: "#ffffff",
+                textTransform: "none",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+                "&:hover": { backgroundColor: "#1e293b" },
+              }}
+            >
+              Preuzmi sve medije (ZIP)
+            </Button>
+          </Stack>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
             p: { xs: 2.5, sm: 4 },
             borderRadius: 4,
             boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
@@ -358,17 +470,30 @@ const EventEdit = () => {
                 required
               />
 
-              <TextField
-                fullWidth
-                type="datetime-local"
-                label="Datum i vreme događaja"
-                value={formData.eventDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, eventDate: e.target.value })
-                }
-                InputLabelProps={{ shrink: true }}
-                required
-              />
+              <FormControl fullWidth>
+                <InputLabel id="font-family-select-label">
+                  Font poruke dobrodošlice
+                </InputLabel>
+                <Select
+                  labelId="font-family-select-label"
+                  id="font-family-select"
+                  value={selectedFont}
+                  label="Font poruke dobrodošlice"
+                  onChange={handleFontChange}
+                >
+                  {FONT_OPTIONS.map((font) => (
+                    <MenuItem
+                      key={font.value}
+                      value={font.value}
+                      sx={{
+                        fontFamily: `"${font.value}", cursive, sans-serif`,
+                      }}
+                    >
+                      {font.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
               <TextField
                 fullWidth
@@ -379,6 +504,12 @@ const EventEdit = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, welcomeMessage: e.target.value })
                 }
+                inputProps={{
+                  style: {
+                    fontFamily: `"${selectedFont}", cursive, sans-serif`,
+                    fontSize: "1.2rem",
+                  },
+                }}
               />
 
               <Button

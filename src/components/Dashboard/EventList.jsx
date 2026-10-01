@@ -1,4 +1,4 @@
-import { Box, Typography, TextField, Grid, Pagination } from "@mui/material";
+import { Box, Typography, TextField, Pagination } from "@mui/material";
 import EventCard from "./EventCard";
 
 const EventList = ({
@@ -11,6 +11,7 @@ const EventList = ({
   onPageChange,
   onNavigate,
   onDownloadQR,
+  onDeleteEvent,
 }) => {
   return (
     <>
@@ -62,6 +63,7 @@ const EventList = ({
             event={event}
             onClick={() => onNavigate(`/${event.slug}`)}
             onDownloadQR={onDownloadQR}
+            onDeleteEvent={onDeleteEvent}
           />
         ))}
       </Box>

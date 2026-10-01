@@ -49,6 +49,16 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      await api.delete(`/event/${eventId}`);
+      fetchEvents();
+    } catch (error) {
+      console.error("Greška pri brisanju događaja:", error);
+      alert(error.response?.data?.message || "Greška pri brisanju događaja.");
+    }
+  };
+
   const logout = async () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -138,6 +148,7 @@ const Dashboard = () => {
         onPageChange={(e, value) => setPage(value)}
         onNavigate={navigate}
         onDownloadQR={handleDownloadQR}
+        onDeleteEvent={handleDeleteEvent}
       />
     </Container>
   );

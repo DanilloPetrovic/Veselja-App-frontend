@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { io } from "socket.io-client";
 import api from "../../functions/axios";
 import {
   Box,
   Typography,
   Container,
   Stack,
+  Button,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import NunitoVariableFontwght from "../../fonts/Nunito-VariableFont_wght.ttf";
 import tangerineFont from "../../fonts/Tangerine-Regular.ttf";
@@ -18,6 +21,8 @@ import MediaUploadMenu from "../../components/Event/MediaUploadMenu";
 import QrCodeModal from "../../components/Event/QrCodeModal";
 import MediaLightboxModal from "../../components/Event/MediaLightboxModal";
 import LoadingScreen from "../../components/Common/LoadingScreen";
+
+const SOCKET_URL = "http://localhost:3000";
 
 const Event = () => {
   const { slug } = useParams();
@@ -57,25 +62,44 @@ const Event = () => {
     return sessionId;
   };
 
-  const handleDownload = async (fileUrl, fileName = "uspomena") => {
+  const currentGuestSessionId = getGuestSessionId();
+
+  const handleDownload = (fileUrl, fileName = "uspomena") => {
+    if (!fileUrl) return;
+
+    const extension = selectedMedia?.fileType === "VIDEO" ? "mp4" : "jpg";
+    const fullFileName = `${fileName}-${Date.now()}.${extension}`;
+
+    const downloadApiUrl = `${api.defaults.baseURL}/media/download?url=${encodeURIComponent(
+      fileUrl,
+    )}&filename=${encodeURIComponent(fullFileName)}`;
+
+    window.location.href = downloadApiUrl;
+  };
+
+  const handleDownloadAll = () => {
+    if (!event?.id || mediaList.length === 0) {
+      alert("Nema medija za preuzimanje.");
+      return;
+    }
+
+    const downloadZipUrl = `${api.defaults.baseURL}/media/download-all/${event.id}`;
+    window.location.href = downloadZipUrl;
+  };
+
+  const handleDeleteMedia = async (mediaId) => {
     try {
-      const response = await fetch(fileUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      await api.delete(`/media/${mediaId}`, {
+        headers: {
+          "x-guest-session-id": currentGuestSessionId,
+        },
+      });
 
-      const link = document.createElement("a");
-      link.href = url;
-      const extension = selectedMedia?.fileType === "VIDEO" ? "mp4" : "jpg";
-      link.download = `${fileName}-${Date.now()}.${extension}`;
-
-      document.body.appendChild(link);
-      link.click();
-
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      setMediaList((prev) => prev.filter((item) => item.id !== mediaId));
+      setSelectedIndex(null);
     } catch (err) {
-      console.error("Greška pri preuzimanju fajla:", err);
-      window.open(fileUrl, "_blank");
+      console.error("Greška pri brisanju medija:", err);
+      alert(err.response?.data?.message || "Greška pri brisanju fajla.");
     }
   };
 
@@ -102,6 +126,40 @@ const Event = () => {
     fetchEvent();
   }, [slug]);
 
+  useEffect(() => {
+    if (!event?.id) return;
+
+    const socket = io(SOCKET_URL);
+
+    socket.emit("join_event_room", event.id);
+
+    socket.on("media_uploaded", (newMedia) => {
+      setMediaList((prevList) => {
+        const exists = prevList.some((item) => item.id === newMedia.id);
+        if (exists) return prevList;
+        return [newMedia, ...prevList];
+      });
+    });
+
+    socket.on("media_deleted", (deletedMediaId) => {
+      setMediaList((prevList) =>
+        prevList.filter((item) => item.id !== deletedMediaId),
+      );
+
+      setSelectedIndex((prevIndex) => {
+        if (prevIndex === null) return null;
+        if (mediaList[prevIndex]?.id === deletedMediaId) {
+          return null;
+        }
+        return prevIndex;
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [event?.id, mediaList]);
+
   const fetchMedia = async (eventId) => {
     try {
       setLoadingMedia(true);
@@ -122,21 +180,25 @@ const Event = () => {
       setUploading(true);
       const formData = new FormData();
       formData.append("eventId", event.id);
-      formData.append("guestSessionId", getGuestSessionId());
+      formData.append("guestSessionId", currentGuestSessionId);
 
       if (files.length === 1) {
         formData.append("file", files[0]);
         await api.post("/media/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "x-guest-session-id": currentGuestSessionId,
+          },
         });
       } else {
         files.forEach((file) => formData.append("files", file));
         await api.post("/media/upload-many", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "x-guest-session-id": currentGuestSessionId,
+          },
         });
       }
-
-      await fetchMedia(event.id);
     } catch (err) {
       console.error("Greška pri uploadu fajla:", err.response?.data || err);
       alert(err.response?.data?.message || "Greška pri slanju medija.");
@@ -205,30 +267,32 @@ const Event = () => {
             direction="row"
             justifyContent="space-between"
             alignItems="center"
-            sx={{ mb: 3, display: "flex", alignItems: "center", gap: "10px" }}
+            sx={{ mb: 3, gap: "10px", flexWrap: "wrap" }}
           >
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                fontSize: { xs: "1.1rem", sm: "1.25rem" },
-                letterSpacing: "-0.02em",
-                color: "#1e293b",
-                fontFamily: "NunitoVariableFont, sans-serif",
-              }}
-            >
-              Broj medija
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: "#64748b",
-                fontWeight: 600,
-                fontSize: "14px",
-              }}
-            >
-              {mediaList.length} {mediaList.length === 1 ? "fajl" : "fajlova"}
-            </Typography>
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                  letterSpacing: "-0.02em",
+                  color: "#1e293b",
+                  fontFamily: "NunitoVariableFont, sans-serif",
+                }}
+              >
+                Broj medija
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#64748b",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                }}
+              >
+                {mediaList.length} {mediaList.length === 1 ? "fajl" : "fajlova"}
+              </Typography>
+            </Box>
           </Stack>
 
           <MediaGrid
@@ -250,10 +314,12 @@ const Event = () => {
           selectedMedia={selectedMedia}
           currentIndex={selectedIndex}
           totalCount={mediaList.length}
+          currentGuestSessionId={currentGuestSessionId}
           onClose={() => setSelectedIndex(null)}
           onNext={handleNext}
           onPrev={handlePrev}
           onDownload={handleDownload}
+          onDelete={handleDeleteMedia}
         />
       </Container>
     </Box>

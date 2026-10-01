@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,8 +6,13 @@ import {
   IconButton,
   Box,
   Typography,
+  Button,
+  DialogTitle,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
+import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -16,162 +21,224 @@ const MediaLightboxModal = ({
   selectedMedia,
   currentIndex,
   totalCount,
+  currentGuestSessionId,
+  isAdmin = false,
   onClose,
   onNext,
   onPrev,
   onDownload,
+  onDelete,
 }) => {
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
   const isOpen = Boolean(selectedMedia);
   const hasPrev = currentIndex !== null && currentIndex > 0;
   const hasNext = currentIndex !== null && currentIndex < totalCount - 1;
 
+  const canDelete = Boolean(
+    selectedMedia && selectedMedia.guestSessionId === currentGuestSessionId,
+  );
+
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (!isOpen) return;
+      if (!isOpen || confirmDeleteOpen) return;
       if (e.key === "ArrowLeft" && hasPrev) onPrev();
       if (e.key === "ArrowRight" && hasNext) onNext();
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, hasPrev, hasNext, onPrev, onNext]);
+  }, [isOpen, hasPrev, hasNext, onPrev, onNext, confirmDeleteOpen]);
+
+  const handleConfirmDelete = () => {
+    if (selectedMedia?.id) {
+      onDelete(selectedMedia.id);
+    }
+    setConfirmDeleteOpen(false);
+  };
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          backgroundColor: "black",
-          color: "white",
-          position: "relative",
-          overflow: "hidden",
-        },
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          top: 12,
-          left: 16,
-          zIndex: 10,
+    <>
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "black",
+            color: "white",
+            position: "relative",
+            overflow: "hidden",
+          },
         }}
       >
-        <Typography
-          variant="body2"
-          sx={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}
-        >
-          {currentIndex !== null ? `${currentIndex + 1} / ${totalCount}` : ""}
-        </Typography>
-      </Box>
-
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          position: "absolute",
-          top: 12,
-          right: 12,
-          zIndex: 10,
-        }}
-      >
-        <IconButton
-          onClick={() =>
-            onDownload(
-              selectedMedia?.fileUrl,
-              `medij-${selectedMedia?.id || "download"}`,
-            )
-          }
-          aria-label="Skini medij"
-          sx={{
-            color: "white",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
-          }}
-        >
-          <DownloadIcon />
-        </IconButton>
-
-        <IconButton
-          onClick={onClose}
-          aria-label="Zatvori"
-          sx={{
-            color: "white",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </Stack>
-
-      {hasPrev && (
-        <IconButton
-          onClick={onPrev}
+        <Box
           sx={{
             position: "absolute",
-            left: 12,
-            top: "50%",
-            transform: "translateY(-50%)",
+            top: 12,
+            left: 16,
             zIndex: 10,
-            color: "white",
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
-            "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.7)" },
           }}
         >
-          <ChevronLeftIcon sx={{ fontSize: 36 }} />
-        </IconButton>
-      )}
+          <Typography
+            variant="body2"
+            sx={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}
+          >
+            {currentIndex !== null ? `${currentIndex + 1} / ${totalCount}` : ""}
+          </Typography>
+        </Box>
 
-      {hasNext && (
-        <IconButton
-          onClick={onNext}
+        <Stack
+          direction="row"
+          spacing={1}
           sx={{
             position: "absolute",
+            top: 12,
             right: 12,
-            top: "50%",
-            transform: "translateY(-50%)",
             zIndex: 10,
-            color: "white",
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
-            "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.7)" },
           }}
         >
-          <ChevronRightIcon sx={{ fontSize: 36 }} />
-        </IconButton>
-      )}
+          <IconButton
+            onClick={() =>
+              onDownload(
+                selectedMedia?.fileUrl,
+                `medij-${selectedMedia?.id || "download"}`,
+              )
+            }
+            aria-label="Skini medij"
+            sx={{
+              color: "white",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
+            }}
+          >
+            <DownloadIcon />
+          </IconButton>
 
-      <DialogContent
-        sx={{
-          p: 0,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: 300,
-        }}
-      >
-        {selectedMedia?.fileType === "VIDEO" ? (
-          <Box
-            key={selectedMedia?.fileUrl}
-            component="video"
-            src={selectedMedia?.fileUrl}
-            controls
-            autoPlay
-            sx={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
-          />
-        ) : (
-          <Box
-            key={selectedMedia?.fileUrl}
-            component="img"
-            src={selectedMedia?.fileUrl}
-            alt="Slika u punoj veličini"
-            sx={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
-          />
+          {canDelete && (
+            <IconButton
+              onClick={() => setConfirmDeleteOpen(true)}
+              aria-label="Obriši medij"
+              sx={{
+                color: "#f87171",
+                backgroundColor: "rgba(0,0,0,0.5)",
+                "&:hover": { backgroundColor: "rgba(239, 68, 68, 0.2)" },
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          )}
+
+          <IconButton
+            onClick={onClose}
+            aria-label="Zatvori"
+            sx={{
+              color: "white",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Stack>
+
+        {hasPrev && (
+          <IconButton
+            onClick={onPrev}
+            sx={{
+              position: "absolute",
+              left: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+              color: "white",
+              backgroundColor: "rgba(0, 0, 0, 0.4)",
+              "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.7)" },
+            }}
+          >
+            <ChevronLeftIcon sx={{ fontSize: 36 }} />
+          </IconButton>
         )}
-      </DialogContent>
-    </Dialog>
+
+        {hasNext && (
+          <IconButton
+            onClick={onNext}
+            sx={{
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+              color: "white",
+              backgroundColor: "rgba(0, 0, 0, 0.4)",
+              "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.7)" },
+            }}
+          >
+            <ChevronRightIcon sx={{ fontSize: 36 }} />
+          </IconButton>
+        )}
+
+        <DialogContent
+          sx={{
+            p: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 300,
+          }}
+        >
+          {selectedMedia?.fileType === "VIDEO" ? (
+            <Box
+              key={selectedMedia?.fileUrl}
+              component="video"
+              src={selectedMedia?.fileUrl}
+              controls
+              autoPlay
+              sx={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
+            />
+          ) : (
+            <Box
+              key={selectedMedia?.fileUrl}
+              component="img"
+              src={selectedMedia?.fileUrl}
+              alt="Slika u punoj veličini"
+              sx={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Brisanje uspomene</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Da li ste sigurni da želite da obrišete ovaj fajl? Ova akcija je
+            trajna.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setConfirmDeleteOpen(false)}
+            variant="outlined"
+            color="inherit"
+          >
+            Otkaži
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            autoFocus
+          >
+            Obriši
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
