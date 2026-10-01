@@ -72,10 +72,6 @@ const EventEdit = () => {
     welcomeMessage: "",
   });
 
-  const savedFont =
-    (slug && localStorage.getItem(`event_font_${slug}`)) || "Tangerine";
-  const [selectedFont, setSelectedFont] = useState(savedFont);
-
   const [coverImage, setCoverImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
