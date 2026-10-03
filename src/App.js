@@ -6,6 +6,7 @@ import Login from "./pages/Login/Login";
 import CreateEvent from "./pages/EventCreate/EventCreate";
 import Event from "./pages/Event/Event";
 import EventEdit from "./pages/EventEdit/EventEdit";
+import "./fonts/fonts.css";
 
 function App() {
   return (

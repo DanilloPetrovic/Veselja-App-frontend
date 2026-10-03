@@ -24,6 +24,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import SaveIcon from "@mui/icons-material/Save";
 import DownloadIcon from "@mui/icons-material/Download";
+import "../../fonts/fonts.css";
 
 const FONT_OPTIONS = [
   { label: "Tangerine", value: "Tangerine" },
@@ -34,25 +35,8 @@ const FONT_OPTIONS = [
   { label: "Montserrat", value: "Montserrat" },
   { label: "Alex Brush (Elegantan rukopis)", value: "Alex Brush" },
   { label: "Caveat (Opušten rukopis)", value: "Caveat" },
-  { label: "Cinzel (Elegatni serif)", value: "Cinzel" },
-  { label: "Sacramento", value: "Sacramento" },
-  { label: "Parisienne", value: "Parisienne" },
-  { label: "Marck Script", value: "Marck Script" },
+  { label: "Cinzel (Elegantni serif)", value: "Cinzel" },
 ];
-
-const loadGoogleFont = (fontFamily) => {
-  if (!fontFamily) return;
-  const formattedFont = fontFamily.replace(/ /g, "+");
-  const linkId = `google-font-${formattedFont}`;
-
-  if (!document.getElementById(linkId)) {
-    const link = document.createElement("link");
-    link.id = linkId;
-    link.rel = "stylesheet";
-    link.href = `https://fonts.googleapis.com/css2?family=${formattedFont}:wght@400;700&display=swap`;
-    document.head.appendChild(link);
-  }
-};
 
 const EventEdit = () => {
   const { slug } = useParams();
@@ -74,10 +58,6 @@ const EventEdit = () => {
 
   const [coverImage, setCoverImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-
-  useEffect(() => {
-    loadGoogleFont(selectedFont);
-  }, [selectedFont]);
 
   useEffect(() => {
     const initEventData = async () => {
@@ -138,9 +118,7 @@ const EventEdit = () => {
   };
 
   const handleFontChange = (e) => {
-    const font = e.target.value;
-    setSelectedFont(font);
-    loadGoogleFont(font);
+    setSelectedFont(e.target.value);
   };
 
   const handleDownloadAll = () => {
@@ -164,7 +142,6 @@ const EventEdit = () => {
       const data = new FormData();
       data.append("title", formData.title);
       data.append("welcomeMessage", formData.welcomeMessage);
-
       data.append("fontFamily", selectedFont);
 
       if (coverImage) {
@@ -245,7 +222,7 @@ const EventEdit = () => {
                 fontWeight: 700,
                 color: "#1e293b",
                 mb: 1,
-                fontFamily: "NunitoVariableFont, sans-serif",
+                fontFamily: "Nunito, sans-serif",
               }}
             >
               Unesite PIN kod
@@ -272,12 +249,14 @@ const EventEdit = () => {
                   label="PIN Kod"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  inputProps={{
-                    maxLength: 4,
-                    style: {
-                      textAlign: "center",
-                      letterSpacing: "8px",
-                      fontSize: "1.2rem",
+                  slotProps={{
+                    htmlInput: {
+                      maxLength: 4,
+                      style: {
+                        textAlign: "center",
+                        letterSpacing: "8px",
+                        fontSize: "1.2rem",
+                      },
                     },
                   }}
                   required
@@ -334,7 +313,7 @@ const EventEdit = () => {
             sx={{
               fontWeight: 700,
               color: "#1e293b",
-              fontFamily: "NunitoVariableFont, sans-serif",
+              fontFamily: "Nunito, sans-serif",
             }}
           >
             Izmena događaja
@@ -471,21 +450,24 @@ const EventEdit = () => {
 
               <FormControl fullWidth>
                 <InputLabel id="font-family-select-label">
-                  Font poruke dobrodošlice
+                  Font naslova i poruke na cover-u
                 </InputLabel>
                 <Select
                   labelId="font-family-select-label"
                   id="font-family-select"
                   value={selectedFont}
-                  label="Font poruke dobrodošlice"
+                  label="Font naslova i poruke na cover-u"
                   onChange={handleFontChange}
+                  sx={{
+                    fontFamily: `"${selectedFont}", sans-serif`,
+                  }}
                 >
                   {FONT_OPTIONS.map((font) => (
                     <MenuItem
                       key={font.value}
                       value={font.value}
                       sx={{
-                        fontFamily: `"${font.value}", cursive, sans-serif`,
+                        fontFamily: `"${font.value}", sans-serif`,
                       }}
                     >
                       {font.label}
@@ -503,10 +485,12 @@ const EventEdit = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, welcomeMessage: e.target.value })
                 }
-                inputProps={{
-                  style: {
-                    fontFamily: `"${selectedFont}", cursive, sans-serif`,
-                    fontSize: "1.2rem",
+                slotProps={{
+                  htmlInput: {
+                    style: {
+                      fontFamily: `"${selectedFont}", sans-serif`,
+                      fontSize: "1.2rem",
+                    },
                   },
                 }}
               />

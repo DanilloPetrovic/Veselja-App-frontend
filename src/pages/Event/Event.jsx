@@ -7,11 +7,9 @@ import {
   Typography,
   Container,
   Stack,
-  Button,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import DownloadIcon from "@mui/icons-material/Download";
 
 import NunitoVariableFontwght from "../../fonts/Nunito-VariableFont_wght.ttf";
 import tangerineFont from "../../fonts/Tangerine-Regular.ttf";
@@ -75,16 +73,6 @@ const Event = () => {
     )}&filename=${encodeURIComponent(fullFileName)}`;
 
     window.location.href = downloadApiUrl;
-  };
-
-  const handleDownloadAll = () => {
-    if (!event?.id || mediaList.length === 0) {
-      alert("Nema medija za preuzimanje.");
-      return;
-    }
-
-    const downloadZipUrl = `${api.defaults.baseURL}/media/download-all/${event.id}`;
-    window.location.href = downloadZipUrl;
   };
 
   const handleDeleteMedia = async (mediaId) => {

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Box,
   Card,
@@ -10,33 +9,13 @@ import {
 import QrCodeIcon from "@mui/icons-material/QrCode2";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useNavigate } from "react-router-dom";
-
-const loadGoogleFont = (fontFamily) => {
-  if (!fontFamily) return;
-  const formattedFont = fontFamily.replace(/ /g, "+");
-  const linkId = `google-font-${formattedFont}`;
-
-  if (!document.getElementById(linkId)) {
-    const link = document.createElement("link");
-    link.id = linkId;
-    link.rel = "stylesheet";
-    link.href = `https://fonts.googleapis.com/css2?family=${formattedFont}:wght@400;700&display=swap`;
-    document.head.appendChild(link);
-  }
-};
+import "../../fonts/fonts.css";
 
 const EventHeader = ({ event, isMobileOrTablet, onOpenQrModal }) => {
   const navigate = useNavigate();
 
-  const savedFont =
-    (event?.slug && localStorage.getItem(`event_font_${event.slug}`)) ||
-    "Tangerine";
-
-  useEffect(() => {
-    if (savedFont) {
-      loadGoogleFont(savedFont);
-    }
-  }, [savedFont]);
+  // Font uzimamo direktno iz objekta događaja sa backend-a
+  const fontToUse = event?.fontFamily || "Tangerine";
 
   const handleEditClick = () => {
     if (event?.slug) {
@@ -131,9 +110,9 @@ const EventHeader = ({ event, isMobileOrTablet, onOpenQrModal }) => {
           <Typography
             variant={isMobileOrTablet ? "h2" : "h1"}
             sx={{
-              fontFamily: `"${savedFont}", cursive, serif`,
+              fontFamily: `"${fontToUse}", sans-serif`,
               color: "#ffffff",
-              lineHeight: 1,
+              lineHeight: 1.2,
               textShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
               fontSize: isMobileOrTablet ? "3.5rem" : "5rem",
             }}
