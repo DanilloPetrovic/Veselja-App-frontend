@@ -20,7 +20,10 @@ import QrCodeModal from "../../components/Event/QrCodeModal";
 import MediaLightboxModal from "../../components/Event/MediaLightboxModal";
 import LoadingScreen from "../../components/Common/LoadingScreen";
 
-const SOCKET_URL = "http://localhost:3000";
+// Dinamički određujemo URL za socket iz Axios konfiguracije
+const SOCKET_URL = api.defaults.baseURL
+  ? new URL(api.defaults.baseURL).origin
+  : "http://localhost:3000";
 
 const Event = () => {
   const { slug } = useParams();
@@ -114,10 +117,13 @@ const Event = () => {
     fetchEvent();
   }, [slug]);
 
+  // SOCKET EFFECT: Povezivanje se vrši samo kada imamo event.id
   useEffect(() => {
     if (!event?.id) return;
 
-    const socket = io(SOCKET_URL);
+    const socket = io(SOCKET_URL, {
+      transports: ["websocket", "polling"],
+    });
 
     socket.emit("join_event_room", event.id);
 
@@ -136,9 +142,6 @@ const Event = () => {
 
       setSelectedIndex((prevIndex) => {
         if (prevIndex === null) return null;
-        if (mediaList[prevIndex]?.id === deletedMediaId) {
-          return null;
-        }
         return prevIndex;
       });
     });
@@ -146,7 +149,7 @@ const Event = () => {
     return () => {
       socket.disconnect();
     };
-  }, [event?.id, mediaList]);
+  }, [event?.id]);
 
   const fetchMedia = async (eventId) => {
     try {

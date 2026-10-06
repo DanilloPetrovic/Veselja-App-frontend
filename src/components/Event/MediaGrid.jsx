@@ -88,7 +88,7 @@ const MediaGrid = ({ mediaList, loadingMedia, onSelectMedia }) => {
                   <Box
                     component="video"
                     className="media-content"
-                    src={item.fileUrl}
+                    src={item.thumbnailUrl || item.fileUrl}
                     sx={{
                       width: "100%",
                       height: "auto",
@@ -120,7 +120,7 @@ const MediaGrid = ({ mediaList, loadingMedia, onSelectMedia }) => {
                 <Box
                   component="img"
                   className="media-content"
-                  src={item.fileUrl}
+                  src={item.thumbnailUrl || item.fileUrl}
                   alt="Uspomena sa događaja"
                   loading="lazy"
                   onError={(e) =>
