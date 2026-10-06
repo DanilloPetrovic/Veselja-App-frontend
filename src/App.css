@@ -36,3 +36,13 @@
     transform: rotate(360deg);
   }
 }
+
+[data-netlify-deploy-id],
+#netlify-modal-root,
+iframe[src*="netlify"] {
+  display: none !important;
+}
+
+netlify-drawer {
+  display: none !important;
+}
