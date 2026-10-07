@@ -88,7 +88,11 @@ const MediaGrid = ({ mediaList, loadingMedia, onSelectMedia }) => {
                   <Box
                     component="video"
                     className="media-content"
-                    src={item.thumbnailUrl || item.fileUrl}
+                    // Dodajemo #t=0.1 da usmeri pregledač na prvi frejm videa
+                    src={`${item.fileUrl}#t=0.1`}
+                    preload="metadata"
+                    playsInline
+                    muted
                     sx={{
                       width: "100%",
                       height: "auto",
