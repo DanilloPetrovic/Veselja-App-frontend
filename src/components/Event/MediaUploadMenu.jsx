@@ -36,7 +36,7 @@ const MediaUploadMenu = ({ onFileChange }) => {
       />
       <input
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         capture="environment"
         ref={cameraInputRef}
         style={{ display: "none" }}
@@ -103,13 +103,25 @@ const MediaUploadMenu = ({ onFileChange }) => {
         <MenuItem
           onClick={() => {
             handleCloseMenu();
+            cameraInputRef.current?.click();
+          }}
+        >
+          <ListItemIcon sx={{ color: "#0f172a" }}>
+            <PhotoCameraIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Kamera</ListItemText>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            handleCloseMenu();
             imageInputRef.current?.click();
           }}
         >
           <ListItemIcon sx={{ color: "#0f172a" }}>
             <ImageIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Dodaj sliku</ListItemText>
+          <ListItemText>Izaberi slike iz galerije</ListItemText>
         </MenuItem>
 
         <MenuItem
@@ -121,7 +133,7 @@ const MediaUploadMenu = ({ onFileChange }) => {
           <ListItemIcon sx={{ color: "#0f172a" }}>
             <VideocamIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Dodaj video</ListItemText>
+          <ListItemText>Izaberi video iz galerije</ListItemText>
         </MenuItem>
       </Menu>
     </>

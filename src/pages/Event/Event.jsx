@@ -20,7 +20,6 @@ import QrCodeModal from "../../components/Event/QrCodeModal";
 import MediaLightboxModal from "../../components/Event/MediaLightboxModal";
 import LoadingScreen from "../../components/Common/LoadingScreen";
 
-// Dinamički određujemo URL za socket iz Axios konfiguracije
 const SOCKET_URL = api.defaults.baseURL
   ? new URL(api.defaults.baseURL).origin
   : "http://localhost:3000";
@@ -78,19 +77,24 @@ const Event = () => {
     window.location.href = downloadApiUrl;
   };
 
-  const handleDeleteMedia = async (mediaId) => {
+  const handleDeleteMedia = async (mediaId, pinCode = "") => {
     try {
-      await api.delete(`/media/${mediaId}`, {
-        headers: {
-          "x-guest-session-id": currentGuestSessionId,
-        },
-      });
+      const headers = {
+        "x-guest-session-id": currentGuestSessionId,
+      };
+
+      if (pinCode) {
+        headers["x-pin-code"] = pinCode;
+      }
+
+      await api.delete(`/media/${mediaId}`, { headers });
 
       setMediaList((prev) => prev.filter((item) => item.id !== mediaId));
       setSelectedIndex(null);
     } catch (err) {
       console.error("Greška pri brisanju medija:", err);
       alert(err.response?.data?.message || "Greška pri brisanju fajla.");
+      throw err;
     }
   };
 
@@ -117,7 +121,6 @@ const Event = () => {
     fetchEvent();
   }, [slug]);
 
-  // SOCKET EFFECT: Povezivanje se vrši samo kada imamo event.id
   useEffect(() => {
     if (!event?.id) return;
 
@@ -155,7 +158,11 @@ const Event = () => {
     try {
       setLoadingMedia(true);
       const response = await api.get(`/media/event/${eventId}`);
-      setMediaList(response.data.data || []);
+      const rawMedia = response.data.data || [];
+      const sortedMedia = [...rawMedia].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+      setMediaList(sortedMedia);
     } catch (err) {
       console.error("Greška pri dohvatanju medija:", err);
     } finally {
@@ -166,6 +173,13 @@ const Event = () => {
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0 || !event?.id) return;
+
+    const MAX_FILES = 10;
+    if (files.length > MAX_FILES) {
+      alert(`Možete poslati najviše ${MAX_FILES} fajlova odjednom.`);
+      e.target.value = "";
+      return;
+    }
 
     try {
       setUploading(true);

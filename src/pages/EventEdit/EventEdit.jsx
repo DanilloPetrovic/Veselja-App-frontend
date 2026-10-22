@@ -24,6 +24,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import SaveIcon from "@mui/icons-material/Save";
 import DownloadIcon from "@mui/icons-material/Download";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import "../../fonts/fonts.css";
 
 const FONT_OPTIONS = [
@@ -94,6 +95,10 @@ const EventEdit = () => {
 
     initEventData();
   }, [slug]);
+
+  const isEventFinished = eventDataState?.eventDate
+    ? new Date(eventDataState.eventDate) < new Date()
+    : false;
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
@@ -330,47 +335,86 @@ const EventEdit = () => {
             backgroundColor: "#ffffff",
           }}
         >
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            spacing={2}
-          >
-            <Box>
-              <Typography
-                variant="h6"
+          {isEventFinished ? (
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              spacing={2}
+            >
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#1e293b",
+                    fontSize: "1.1rem",
+                  }}
+                >
+                  Preuzimanje medija
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#64748b" }}>
+                  Preuzmite sve slike i video zapise sa ovog događaja u jednoj
+                  ZIP arhivi.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                onClick={handleDownloadAll}
                 sx={{
+                  py: 1.2,
+                  px: 3,
+                  borderRadius: 2.5,
+                  backgroundColor: "#0f172a",
+                  color: "#ffffff",
+                  textTransform: "none",
                   fontWeight: 700,
-                  color: "#1e293b",
-                  fontSize: "1.1rem",
+                  whiteSpace: "nowrap",
+                  "&:hover": { backgroundColor: "#1e293b" },
                 }}
               >
-                Preuzimanje medija
-              </Typography>
-              <Typography variant="body2" sx={{ color: "#64748b" }}>
-                Preuzmite sve slike i video zapise sa ovog događaja u jednoj ZIP
-                arhivi.
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<DownloadIcon />}
-              onClick={handleDownloadAll}
-              sx={{
-                py: 1.2,
-                px: 3,
-                borderRadius: 2.5,
-                backgroundColor: "#0f172a",
-                color: "#ffffff",
-                textTransform: "none",
-                fontWeight: 700,
-                whiteSpace: "nowrap",
-                "&:hover": { backgroundColor: "#1e293b" },
-              }}
-            >
-              Preuzmi sve medije (ZIP)
-            </Button>
-          </Stack>
+                Preuzmi sve medije (ZIP)
+              </Button>
+            </Stack>
+          ) : (
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 44,
+                  height: 44,
+                  borderRadius: 3,
+                  backgroundColor: "#f1f5f9",
+                  color: "#0f172a",
+                  flexShrink: 0,
+                }}
+              >
+                <InfoOutlinedIcon />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#1e293b",
+                    fontSize: "1.05rem",
+                  }}
+                >
+                  Preuzimanje celog albuma (ZIP)
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#64748b", fontWeight: 500 }}
+                >
+                  Opcija za preuzimanje svih medija u jednoj ZIP arhivi biće
+                  dostupna na ovom mestu nakon što se događaj zvanično završi.
+                </Typography>
+              </Box>
+            </Stack>
+          )}
         </Paper>
 
         <Paper
