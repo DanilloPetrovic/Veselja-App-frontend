@@ -175,38 +175,53 @@ const Event = () => {
     if (files.length === 0 || !event?.id) return;
 
     const MAX_FILES = 10;
+    const MAX_VIDEOS = 3;
+
     if (files.length > MAX_FILES) {
       alert(`Možete poslati najviše ${MAX_FILES} fajlova odjednom.`);
       e.target.value = "";
       return;
     }
 
+    const videoFiles = files.filter((file) => file.type.startsWith("video/"));
+    if (videoFiles.length > MAX_VIDEOS) {
+      alert(`Možete poslati najviše ${MAX_VIDEOS} videa odjednom.`);
+      e.target.value = "";
+      return;
+    }
+
     try {
       setUploading(true);
-      const formData = new FormData();
-      formData.append("eventId", event.id);
-      formData.append("guestSessionId", currentGuestSessionId);
 
-      if (files.length === 1) {
-        formData.append("file", files[0]);
-        await api.post("/media/upload", formData, {
+      const uploadPromises = files.map((file) => {
+        const formData = new FormData();
+        formData.append("eventId", event.id);
+        formData.append("guestSessionId", currentGuestSessionId);
+        formData.append("file", file);
+
+        return api.post("/media/upload", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
             "x-guest-session-id": currentGuestSessionId,
           },
         });
-      } else {
-        files.forEach((file) => formData.append("files", file));
-        await api.post("/media/upload-many", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "x-guest-session-id": currentGuestSessionId,
-          },
-        });
+      });
+
+      const results = await Promise.allSettled(uploadPromises);
+
+      const failures = results.filter((res) => res.status === "rejected");
+      if (failures.length > 0) {
+        if (failures.length === files.length) {
+          alert("Greška pri slanju medija.");
+        } else {
+          alert(
+            `Uspešno je poslano ${files.length - failures.length} od ${files.length} fajlova.`,
+          );
+        }
       }
     } catch (err) {
-      console.error("Greška pri uploadu fajla:", err.response?.data || err);
-      alert(err.response?.data?.message || "Greška pri slanju medija.");
+      console.error("Greška pri uploadu fajlova:", err);
+      alert("Došlo je do neočekivane greške pri slanju.");
     } finally {
       setUploading(false);
       e.target.value = "";

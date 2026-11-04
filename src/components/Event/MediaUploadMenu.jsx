@@ -3,6 +3,7 @@ import { Fab, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ImageIcon from "@mui/icons-material/ImageOutlined";
 import VideocamIcon from "@mui/icons-material/VideocamOutlined";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCameraOutlined";
 
 const MediaUploadMenu = ({ onFileChange }) => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -10,7 +11,8 @@ const MediaUploadMenu = ({ onFileChange }) => {
 
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
+  const photoCameraInputRef = useRef(null);
+  const videoCameraInputRef = useRef(null);
 
   const handleFabClick = (e) => setAnchorEl(e.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
@@ -25,19 +27,30 @@ const MediaUploadMenu = ({ onFileChange }) => {
         style={{ display: "none" }}
         onChange={onFileChange}
       />
+
       <input
         type="file"
-        accept="video/*"
+        accept="video/*,video/mp4,video/quicktime,video/webm"
         multiple
         ref={videoInputRef}
         style={{ display: "none" }}
         onChange={onFileChange}
       />
+
       <input
         type="file"
         accept="image/*"
         capture="environment"
-        ref={cameraInputRef}
+        ref={photoCameraInputRef}
+        style={{ display: "none" }}
+        onChange={onFileChange}
+      />
+
+      <input
+        type="file"
+        accept="video/mp4,video/quicktime,video/*"
+        capture="environment"
+        ref={videoCameraInputRef}
         style={{ display: "none" }}
         onChange={onFileChange}
       />
@@ -76,7 +89,7 @@ const MediaUploadMenu = ({ onFileChange }) => {
           elevation: 0,
           sx: {
             borderRadius: 3,
-            minWidth: 200,
+            minWidth: 220,
             mb: 1.5,
             p: 1,
             backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -108,7 +121,7 @@ const MediaUploadMenu = ({ onFileChange }) => {
           <ListItemIcon sx={{ color: "#0f172a" }}>
             <ImageIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Dodaj sliku</ListItemText>
+          <ListItemText>Slike iz galerije</ListItemText>
         </MenuItem>
 
         <MenuItem
@@ -120,7 +133,31 @@ const MediaUploadMenu = ({ onFileChange }) => {
           <ListItemIcon sx={{ color: "#0f172a" }}>
             <VideocamIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Dodaj video</ListItemText>
+          <ListItemText>Video iz galerije</ListItemText>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            handleCloseMenu();
+            photoCameraInputRef.current?.click();
+          }}
+        >
+          <ListItemIcon sx={{ color: "#0f172a" }}>
+            <PhotoCameraIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Slikaj kamerom</ListItemText>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            handleCloseMenu();
+            videoCameraInputRef.current?.click();
+          }}
+        >
+          <ListItemIcon sx={{ color: "#0f172a" }}>
+            <VideocamIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Snimi video kamerom</ListItemText>
         </MenuItem>
       </Menu>
     </>
